@@ -9,7 +9,7 @@ Please visit the wiki for installation and intial configuration instructions
 ## Usage
 ```bash
 ⚡ python shadowclone.py -h
-usage: cloudcli.py [-h] -i INPUT [-s SPLITNUM] [-o OUTPUT] -c COMMAND
+usage: shadowclone.py [-h] -i INPUT [-s SPLITNUM] [-o OUTPUT] -c COMMAND
 
 optional arguments:
   -h, --help            show this help message and exit
