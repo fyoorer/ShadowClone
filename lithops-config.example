@@ -1,0 +1,20 @@
+lithops:
+    backend: aws_lambda
+    storage: aws_s3
+    execution_timeout: 1800
+
+aws:
+    access_key_id: AKIADEADBEEF
+    secret_access_key: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+    #account_id: <ACCOUNT_ID>  # Optional
+
+aws_lambda:
+    execution_role: arn:aws:iam::123123123123:role/lithops-execution-role
+    region_name: us-east-1
+    runtime_memory: 512
+    runtime_timeout: 330
+    # worker_processes: 10
+
+aws_s3:
+    storage_bucket: MYBUCKET
+    region_name : us-east-1
