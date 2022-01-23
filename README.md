@@ -4,7 +4,7 @@ ShadowClone allows you to  distribute your long running tasks dynamically across
 You can make full use of the Free Tiers provided by cloud providers and supercharge your mundane cli tools with shadow clone jutsu (Naruto style)!
 
 ## Installation
-Please visit the wiki for installation and intial configuration instructions
+Please visit the [wiki](https://github.com/fyoorer/ShadowClone/wiki) for installation and intial configuration instructions
 
 ## Usage
 ```bash
