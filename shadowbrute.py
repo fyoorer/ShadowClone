@@ -67,7 +67,7 @@ if __name__ == '__main__':
     domain = args.domain
 
     try:
-        fexec = FunctionExecutor(runtime=config.LITHOPS_RUNTIME,runtime_memory=512) # change runtime
+        fexec = FunctionExecutor(runtime=config.LITHOPS_RUNTIME,runtime_memory=256) # change runtime
         fexec.map(dns_bruteforce,iterdata, obj_chunk_size=object_chunksize, extra_args={domain})
         output = fexec.get_result()
     except:
