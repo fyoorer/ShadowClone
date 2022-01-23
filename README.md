@@ -80,3 +80,7 @@ Obviously, you can make any number of function invocations per month. The table 
 - [Axiom](https://github.com/pry0cc/axiom)
 - [Fleex](https://github.com/FleexSecurity/fleex)
 - [gopherblazer](https://github.com/0xdevalias/gopherblazer)
+
+## Disclaimer
+This tool is designed as a proof-of-concept implementation and it's usage is intended for educational purpose only. Usage
+for attacking targets without prior mutual consent is illegal. It's the end user's responsibility to obey all applicable local, state and federal laws. Developers assume no liability and are not responsible for any misuse or damage caused by this program. 
