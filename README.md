@@ -63,7 +63,7 @@ Running httpx on 94K subdomains in 1 min
 [![asciicast](https://asciinema.org/a/GSwuqyd9X4JfXGlqQEFiDdefi.svg)](https://asciinema.org/a/GSwuqyd9X4JfXGlqQEFiDdefi)
 
 ## References
-Lithops documentation
+[Lithops documentation](https://lithops-cloud.github.io/docs/index.html)
 
 
 ### Free Tiers
