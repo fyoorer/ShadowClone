@@ -22,6 +22,9 @@ optional arguments:
 
 ```
 
+## How it works
+We create a container image during the initial setup and register it as a runtime for our function in AWS/GCP/Azure whatever. When you execute ShadowClone on your computer,  instances of that container are activated automatically and are only active for the duration of its execution. How many instances to activate is dynamically decided at runtime depending on the size of the input file provided and the split factor. The input is then split into chunks and equally distributed between all the instances to execute in parallel. For example, if your input file has 10,000 lines and you set the split factor to 100 lines, then it will be split into 100 chunks of 100 lines each and 100 instances will be run in parallel! 
+
 ## Features
 - Extremely fast
 - No need to maintain a VPS (or a fleet of it :)) 
