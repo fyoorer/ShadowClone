@@ -45,6 +45,7 @@ This tool was inspired by the awesome [Axiom](https://github.com/pry0cc/axiom) a
 | Instances             | 10-100s*                 | 1000s         |
 | Cost                  | Per instance/per minute | Mostly Free** |
 | Startup Time          | 4-5 minutes             | 2-3 seconds   |
+| Max Execution Time	| Unlimited		  | 15 minutes    |
 | Idle Cost                 | $++                     | Free          |
 | On Demand Scalability | No                      |        ∞        |
 
