@@ -8,6 +8,7 @@ import uuid
 import sys
 import config
 import tempfile
+from multiprocessing.pool import ThreadPool
 
 
 def splitfile(infile, SPLIT_NUM):
@@ -31,33 +32,24 @@ def splitfile(infile, SPLIT_NUM):
             smallfile.close()
     return chunks
 
-def upload_to_bucket(infile, bucket_name, SPLIT_NUM):
-    storage = Storage()
-    BUCKET_NAME = bucket_name # 'lithtestbucket' # change this to dynamic
-    files_list = []
 
-    # upload all chunks
-    sys.stderr.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S,%f")[:-3] + " [INFO] Splitting input file into chunks of "+ str(SPLIT_NUM) +" lines\n")
-
-    chunks = splitfile(infile, SPLIT_NUM)
-
-    for chunk in chunks:
-        f = open(chunk,'r')
-        contents = f.read()
-        upload_key = str(uuid.uuid4())
-        try:
-            storage.put_object(bucket=BUCKET_NAME, key=upload_key, body=contents)
-        except Exception as e:
-            # raise e
-            sys.stderr.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S,%f")[:-3] + " [ERROR] Error occured while accessing the storage bucket. Did you update the config.py file?")
-            exit()
-        files_list.append(BUCKET_NAME+'/'+upload_key)    
-    return files_list 
+def upload_to_bucket(chunk):
+    bucket_name = config.STORAGE_BUCKET
+    f = open(chunk,'r')
+    contents = f.read()
+    upload_key = str(uuid.uuid4())
+    try:
+        storage.put_object(bucket=bucket_name, key=upload_key, body=contents)
+    except Exception as e:
+        sys.stderr.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S,%f")[:-3] + " [ERROR] Error occured while accessing the storage bucket. Did you update the config.py file?")
+        # exit()
+        pass
+    return bucket_name+'/'+upload_key
 
 
 def delete_bucket_files(fileslist):
     sys.stderr.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S,%f")[:-3] + " [INFO] Cleaning up\n")
-    storage = Storage()
+    # storage = Storage()
     keys = []
     bucket_name = fileslist[0].split('/')[0]
     for f in fileslist:
@@ -100,6 +92,7 @@ if __name__ == '__main__':
     bucket_name = config.STORAGE_BUCKET
     infile = args.input
     command = args.command
+    storage = Storage()
 
     if args.splitnum:
         try:
@@ -109,14 +102,17 @@ if __name__ == '__main__':
     else:
         SPLIT_NUM = 1000
 
-    if os.path.exists(infile):
-        sys.stderr.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S,%f")[:-3] + " [INFO] Uploading input file to storage\n")
-        filekey = upload_to_bucket(infile, bucket_name, SPLIT_NUM)
-        # print(filekey)
+    if os.path.exists(infile):        
+        sys.stderr.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S,%f")[:-3] + " [INFO] Splitting input file into chunks of "+ str(SPLIT_NUM) +" lines\n")
+        chunks = splitfile(infile, SPLIT_NUM)
+        pool = ThreadPool(processes=100) # 100 upload threads
+        sys.stderr.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S,%f")[:-3] + " [INFO] Uploading chunks to storage\n")
+        filekeys = pool.map(upload_to_bucket, chunks)
+        # print(filekeys)
         object_chunksize = 1*1024**2
         try:
             fexec = FunctionExecutor(runtime=runtime) # change runtime memory if reuired
-            fexec.map(execute_command,filekey, obj_chunk_size=object_chunksize, extra_args={command})
+            fexec.map(execute_command,filekeys, obj_chunk_size=object_chunksize, extra_args={command})
             output = fexec.get_result()
         except:
             sys.stderr.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S,%f")[:-3] + " [ERROR] Could not execute the runtime.\n")
@@ -137,6 +133,6 @@ if __name__ == '__main__':
             print(line)
 
     # delete input files from bucket
-    delete_bucket_files(filekey)
+    delete_bucket_files(filekeys)
 
 
