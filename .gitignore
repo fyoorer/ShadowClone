@@ -1,0 +1,3 @@
+*.txt
+__pycache__
+bucket-hash.db

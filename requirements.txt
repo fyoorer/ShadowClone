@@ -70,3 +70,4 @@ wcwidth==0.2.5
 websocket-client==1.2.3
 wrapt==1.13.3
 delegator.py
+pickledb

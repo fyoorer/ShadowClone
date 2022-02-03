@@ -9,6 +9,8 @@ import sys
 import config
 import tempfile
 from multiprocessing.pool import ThreadPool
+from hasher import perform_hashing
+import pickledb
 
 
 def splitfile(infile, SPLIT_NUM):
@@ -34,16 +36,24 @@ def splitfile(infile, SPLIT_NUM):
 
 
 def upload_to_bucket(chunk):
+    chunk_hash = perform_hashing(chunk)
+
+    if db.get(chunk_hash):
+        # same file already exists in bucket
+        return db.get(chunk_hash)
+
     bucket_name = config.STORAGE_BUCKET
     f = open(chunk,'r')
     contents = f.read()
     upload_key = str(uuid.uuid4())
     try:
         storage.put_object(bucket=bucket_name, key=upload_key, body=contents)
+        db.set(chunk_hash, bucket_name+'/'+upload_key)
+
     except Exception as e:
         sys.stderr.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S,%f")[:-3] + " [ERROR] Error occured while accessing the storage bucket. Did you update the config.py file?")
         # exit()
-        pass
+        pass    
     return bucket_name+'/'+upload_key
 
 
@@ -102,13 +112,22 @@ if __name__ == '__main__':
     else:
         SPLIT_NUM = 1000
 
+    # initiate pickle db
+    db = pickledb.load('bucket-hash.db', False) # set auto-dump to false
+
     if os.path.exists(infile):        
         sys.stderr.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S,%f")[:-3] + " [INFO] Splitting input file into chunks of "+ str(SPLIT_NUM) +" lines\n")
         chunks = splitfile(infile, SPLIT_NUM)
-        pool = ThreadPool(processes=100) # 100 upload threads
+        if len(chunks) < 100:
+            pool = ThreadPool(processes=len(chunks)) 
+        else:
+            pool = ThreadPool(processes=100) # max 100 threads
+
         sys.stderr.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S,%f")[:-3] + " [INFO] Uploading chunks to storage\n")
         filekeys = pool.map(upload_to_bucket, chunks)
+        db.dump()  # save the db to file
         # print(filekeys)
+
         object_chunksize = 1*1024**2
         try:
             fexec = FunctionExecutor(runtime=runtime) # change runtime memory if reuired
@@ -133,6 +152,6 @@ if __name__ == '__main__':
             print(line)
 
     # delete input files from bucket
-    delete_bucket_files(filekeys)
+    # delete_bucket_files(filekeys)
 
 
