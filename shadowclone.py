@@ -113,7 +113,7 @@ if __name__ == '__main__':
         SPLIT_NUM = 1000
 
     # initiate pickle db
-    db = pickledb.load('bucket-hash.db', False) # set auto-dump to false
+    db = pickledb.load(config.PICKLE_DB, False) # set auto-dump to false
 
     if os.path.exists(infile):        
         sys.stderr.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S,%f")[:-3] + " [INFO] Splitting input file into chunks of "+ str(SPLIT_NUM) +" lines\n")
