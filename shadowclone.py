@@ -3,7 +3,7 @@ from lithops import FunctionExecutor
 from lithops import Storage
 import argparse
 import os.path
-import delegator
+from invoke import run
 import uuid
 import sys
 import config
@@ -11,6 +11,11 @@ import tempfile
 from multiprocessing.pool import ThreadPool
 from hasher import perform_hashing
 import pickledb
+import boto3
+
+
+def printerr(msg):
+    sys.stderr.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S,%f")[:-3] +" " + msg + "\n")
 
 
 def splitfile(infile, SPLIT_NUM):
@@ -38,7 +43,7 @@ def splitfile(infile, SPLIT_NUM):
 def upload_to_bucket(chunk):
     chunk_hash = perform_hashing(chunk)
 
-    if db.get(chunk_hash):
+    if db.exists(chunk_hash):
         # same file already exists in bucket
         return db.get(chunk_hash)
 
@@ -51,14 +56,14 @@ def upload_to_bucket(chunk):
         db.set(chunk_hash, bucket_name+'/'+upload_key)
 
     except Exception as e:
-        sys.stderr.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S,%f")[:-3] + " [ERROR] Error occured while accessing the storage bucket. Did you update the config.py file?")
+        printerr(" [ERROR] Error occured while accessing the storage bucket. Did you update the config.py file?")
         # exit()
         pass    
     return bucket_name+'/'+upload_key
 
 
 def delete_bucket_files(fileslist):
-    sys.stderr.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S,%f")[:-3] + " [INFO] Cleaning up\n")
+    printerr("[INFO] Cleaning up")
     # storage = Storage()
     keys = []
     bucket_name = fileslist[0].split('/')[0]
@@ -73,7 +78,7 @@ def delete_bucket_files(fileslist):
     return
 
 
-def execute_command(obj, command):
+def execute_command(obj, command, nosplit):
     data = obj.data_stream.read()
 
     with open('/tmp/infile','w') as infile:
@@ -82,12 +87,25 @@ def execute_command(obj, command):
 
     cmd = command.replace('{INPUT}','/tmp/infile')
     cmd = cmd.replace('{OUTPUT}','/tmp/outfile')
+    cmd = cmd.replace('{NOSPLIT}', '/tmp/rawfile')
 
+    if nosplit:
+        s3 = boto3.client('s3')
+        bucket_name = nosplit.split('/')[0]
+        object_name = nosplit.split('/')[1]
+        file_name = '/tmp/rawfile'
+
+        try:
+            s3.download_file(bucket_name, object_name, file_name)
+        except:
+            pass
+        # results = delegator.run("cat /tmp/rawfile", timeout=-1)
+    
     try:
-        results = delegator.run(cmd, timeout=-1)
+        results = run(cmd)
     except:
         print("Error in running the command:"+ command)
-    return results.out
+    return results.stdout
 
 
 if __name__ == '__main__':
@@ -96,6 +114,7 @@ if __name__ == '__main__':
     parser.add_argument('-s', '--split', dest='splitnum', required=False, help="Number of lines per chunk of file")
     parser.add_argument('-o', '--output', dest='output', required=False, help="Write output to a file")
     parser.add_argument('-c', '--command', dest='command', required=True, help="Command to execute") 
+    parser.add_argument('--no-split', dest='nosplit', required=False, help="File to be used without splitting")
     args = parser.parse_args()
 
     runtime = config.LITHOPS_RUNTIME
@@ -103,6 +122,8 @@ if __name__ == '__main__':
     infile = args.input
     command = args.command
     storage = Storage()
+    # initiate pickle db
+    db = pickledb.load(config.PICKLE_DB, False) # set auto-dump to false
 
     if args.splitnum:
         try:
@@ -112,32 +133,44 @@ if __name__ == '__main__':
     else:
         SPLIT_NUM = 1000
 
-    # initiate pickle db
-    db = pickledb.load(config.PICKLE_DB, False) # set auto-dump to false
+    if args.nosplit:
+        nosplit_file = args.nosplit
+        if os.path.exists(nosplit_file):
+            printerr("[INFO] Uploading file to bucket without splitting")
+            nosplit_s3 = upload_to_bucket(nosplit_file)
+            printerr("[INFO] Raw file uploaded successfully:"+nosplit_s3)
+        else:
+            printerr("[ERROR] --nosplit: File not found")
+            exit(0)
+    else:
+        nosplit_s3 = None
+
 
     if os.path.exists(infile):        
-        sys.stderr.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S,%f")[:-3] + " [INFO] Splitting input file into chunks of "+ str(SPLIT_NUM) +" lines\n")
+        printerr(" [INFO] Splitting input file into chunks of "+ str(SPLIT_NUM) +" lines")
         chunks = splitfile(infile, SPLIT_NUM)
-        if len(chunks) < 100:
+        if len(chunks) == 0: #empty file
+            pool = ThreadPool(processes=1)
+        elif len(chunks) < 100:
             pool = ThreadPool(processes=len(chunks)) 
         else:
             pool = ThreadPool(processes=100) # max 100 threads
 
-        sys.stderr.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S,%f")[:-3] + " [INFO] Uploading chunks to storage\n")
+        printerr(" [INFO] Uploading chunks to storage")
         filekeys = pool.map(upload_to_bucket, chunks)
         db.dump()  # save the db to file
         # print(filekeys)
 
-        object_chunksize = 1*1024**2
+        # object_chunksize = 1*1024**2
         try:
             fexec = FunctionExecutor(runtime=runtime) # change runtime memory if reuired
-            fexec.map(execute_command,filekeys, obj_chunk_size=object_chunksize, extra_args={command})
+            fexec.map(execute_command,filekeys, extra_args={command, nosplit_s3})
             output = fexec.get_result()
         except:
-            sys.stderr.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S,%f")[:-3] + " [ERROR] Could not execute the runtime.\n")
+            printerr(" [ERROR] Could not execute the runtime.")
             exit()
     else:
-        sys.stderr.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S,%f")[:-3] + " [ERROR] Input file not found")
+        printerr(" [ERROR] Input file not found")
         exit()
 
     # print(output)
