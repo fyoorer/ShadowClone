@@ -40,7 +40,7 @@ def splitfile(infile, SPLIT_NUM):
     return chunks
 
 
-def upload_to_bucket(chunk):
+def upload_to_bucket(chunk, keep_extension=False):
     chunk_hash = perform_hashing(chunk)
 
     if db.exists(chunk_hash):
@@ -48,9 +48,15 @@ def upload_to_bucket(chunk):
         return db.get(chunk_hash)
 
     bucket_name = config.STORAGE_BUCKET
+
+    filename, ext = os.path.splitext(chunk)
     f = open(chunk,'r')
     contents = f.read()
-    upload_key = str(uuid.uuid4())
+    if keep_extension:
+        upload_key = str(uuid.uuid4()) + ext
+    else:
+        upload_key = str(uuid.uuid4())
+
     try:
         storage.put_object(bucket=bucket_name, key=upload_key, body=contents)
         db.set(chunk_hash, bucket_name+'/'+upload_key)
@@ -87,20 +93,18 @@ def execute_command(obj, command, nosplit):
 
     cmd = command.replace('{INPUT}','/tmp/infile')
     cmd = cmd.replace('{OUTPUT}','/tmp/outfile')
-    cmd = cmd.replace('{NOSPLIT}', '/tmp/rawfile')
 
     if nosplit:
         s3 = boto3.client('s3')
         bucket_name = nosplit.split('/')[0]
         object_name = nosplit.split('/')[1]
-        file_name = '/tmp/rawfile'
+        file_name = '/tmp/' + object_name
 
         try:
             s3.download_file(bucket_name, object_name, file_name)
         except:
             pass
-        # results = delegator.run("cat /tmp/rawfile", timeout=-1)
-    
+        cmd = cmd.replace('{NOSPLIT}', file_name)
     try:
         results = run(cmd)
     except:
@@ -137,7 +141,7 @@ if __name__ == '__main__':
         nosplit_file = args.nosplit
         if os.path.exists(nosplit_file):
             printerr("[INFO] Uploading file to bucket without splitting")
-            nosplit_s3 = upload_to_bucket(nosplit_file)
+            nosplit_s3 = upload_to_bucket(nosplit_file, True)
             printerr("[INFO] Raw file uploaded successfully:"+nosplit_s3)
         else:
             printerr("[ERROR] --nosplit: File not found")

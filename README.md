@@ -19,6 +19,7 @@ optional arguments:
   -o OUTPUT, --output OUTPUT
   -c COMMAND, --command COMMAND
                         command to execute
+  --no-split NOSPLIT    File to be used without splitting
 
 ```
 
