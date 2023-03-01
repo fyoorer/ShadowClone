@@ -63,9 +63,9 @@ RUN unzip lithops_lambda.zip \
 
 
 # install go
-RUN wget https://dl.google.com/go/go1.17.5.linux-amd64.tar.gz
-RUN tar -xvf go1.17.5.linux-amd64.tar.gz
-RUN rm go1.17.5.linux-amd64.tar.gz
+RUN wget https://dl.google.com/go/go1.19.5.linux-amd64.tar.gz
+RUN tar -xvf go1.19.5.linux-amd64.tar.gz
+RUN rm go1.19.5.linux-amd64.tar.gz
 RUN mv go /usr/local
 
 # ENV for Go
