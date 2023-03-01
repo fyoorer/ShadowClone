@@ -1,7 +1,7 @@
 # Define custom function directory
 ARG FUNCTION_DIR="/function"
 
-FROM python:3.10-buster as build-image
+FROM python:3.9-buster as build-image
 
 # Include global arg in this stage of the build
 ARG FUNCTION_DIR
@@ -41,7 +41,7 @@ RUN pip install \
         delegator.py
 
 
-FROM python:3.10-buster
+FROM python:3.9-buster
 
 # Include global arg in this stage of the build
 ARG FUNCTION_DIR
