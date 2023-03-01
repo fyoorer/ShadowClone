@@ -45,6 +45,7 @@ def upload_to_bucket(chunk, keep_extension=False):
 
     if db.exists(chunk_hash):
         # same file already exists in bucket
+        printerr("[INFO] The file is already uploaded to bucket. Skipping upload.")
         return db.get(chunk_hash)
 
     bucket_name = config.STORAGE_BUCKET
@@ -53,16 +54,16 @@ def upload_to_bucket(chunk, keep_extension=False):
     f = open(chunk,'r')
     contents = f.read()
     if keep_extension:
-        upload_key = str(uuid.uuid4()) + ext
+        upload_key = filename + ext
     else:
         upload_key = str(uuid.uuid4())
 
     try:
         storage.put_object(bucket=bucket_name, key=upload_key, body=contents)
         db.set(chunk_hash, bucket_name+'/'+upload_key)
-
+        printerr("[INFO] File uploaded successfully:"+ bucket_name + "/" + upload_key)
     except Exception as e:
-        printerr(" [ERROR] Error occured while accessing the storage bucket. Did you update the config.py file?")
+        printerr("[ERROR] Error occured while accessing the storage bucket. Did you update the config.py file?")
         # exit()
         pass    
     return bucket_name+'/'+upload_key
@@ -85,18 +86,21 @@ def delete_bucket_files(fileslist):
 
 
 def execute_command(obj, command, nosplit):
+    from invoke import run
     data = obj.data_stream.read()
 
     with open('/tmp/infile','w') as infile:
         for line in data.splitlines():
             infile.write(line.decode("UTF-8")+'\n')
 
-    cmd = command.replace('{INPUT}','/tmp/infile')
-    cmd = cmd.replace('{OUTPUT}','/tmp/outfile')
+    # cmd = command.replace('{INPUT}','/tmp/infile')
+    # cmd = cmd.replace('{OUTPUT}','/tmp/outfile')
 
     if nosplit:
+        print(nosplit)
         s3 = boto3.client('s3')
         bucket_name = nosplit.split('/')[0]
+        print(bucket_name)
         object_name = nosplit.split('/')[1]
         file_name = '/tmp/' + object_name
 
@@ -104,11 +108,12 @@ def execute_command(obj, command, nosplit):
             s3.download_file(bucket_name, object_name, file_name)
         except:
             pass
-        cmd = cmd.replace('{NOSPLIT}', file_name)
+        command = command.replace('{NOSPLIT}', file_name)
     try:
-        results = run(cmd)
-    except:
+        results = run(command.format(INPUT="/tmp/infile", OUTPUT="/tmp/outfile"))
+    except Exception as e:
         print("Error in running the command:"+ command)
+        return str(e)
     return results.stdout
 
 
@@ -142,7 +147,7 @@ if __name__ == '__main__':
         if os.path.exists(nosplit_file):
             printerr("[INFO] Uploading file to bucket without splitting")
             nosplit_s3 = upload_to_bucket(nosplit_file, True)
-            printerr("[INFO] Raw file uploaded successfully:"+nosplit_s3)
+            
         else:
             printerr("[ERROR] --nosplit: File not found")
             exit(0)
@@ -151,7 +156,7 @@ if __name__ == '__main__':
 
 
     if os.path.exists(infile):        
-        printerr(" [INFO] Splitting input file into chunks of "+ str(SPLIT_NUM) +" lines")
+        printerr("[INFO] Splitting input file into chunks of "+ str(SPLIT_NUM) +" lines")
         chunks = splitfile(infile, SPLIT_NUM)
         if len(chunks) == 0: #empty file
             pool = ThreadPool(processes=1)
@@ -160,22 +165,20 @@ if __name__ == '__main__':
         else:
             pool = ThreadPool(processes=100) # max 100 threads
 
-        printerr(" [INFO] Uploading chunks to storage")
+        printerr("[INFO] Uploading chunks to storage")
         filekeys = pool.map(upload_to_bucket, chunks)
         db.dump()  # save the db to file
-        # print(filekeys)
-
-        # object_chunksize = 1*1024**2
         try:
             fexec = FunctionExecutor(runtime=runtime) # change runtime memory if reuired
             fexec.map(execute_command,filekeys, extra_args={command, nosplit_s3})
             output = fexec.get_result()
-        except:
-            printerr(" [ERROR] Could not execute the runtime.")
-            exit()
+        except Exception as e:
+            printerr("[ERROR] Could not execute the runtime.")
+            print(e)
+            sys.exit(1)
     else:
-        printerr(" [ERROR] Input file not found")
-        exit()
+        printerr("[ERROR] Input file not found")
+        sys.exit(1)
 
     # print(output)
     for line in output:
