@@ -54,7 +54,7 @@ def upload_to_bucket(chunk, keep_extension=False):
     f = open(chunk,'r')
     contents = f.read()
     if keep_extension:
-        upload_key = filename + ext
+        upload_key = str(uuid.uuid4()) + ext
     else:
         upload_key = str(uuid.uuid4())
 
@@ -93,14 +93,14 @@ def execute_command(obj, command, nosplit):
         for line in data.splitlines():
             infile.write(line.decode("UTF-8")+'\n')
 
-    # cmd = command.replace('{INPUT}','/tmp/infile')
-    # cmd = cmd.replace('{OUTPUT}','/tmp/outfile')
+    command = command.replace('{INPUT}','/tmp/infile')
+    command = command.replace('{OUTPUT}','/tmp/outfile')
 
     if nosplit:
-        print(nosplit)
+        # print(nosplit)
         s3 = boto3.client('s3')
         bucket_name = nosplit.split('/')[0]
-        print(bucket_name)
+        # print(bucket_name)
         object_name = nosplit.split('/')[1]
         file_name = '/tmp/' + object_name
 
@@ -108,9 +108,10 @@ def execute_command(obj, command, nosplit):
             s3.download_file(bucket_name, object_name, file_name)
         except:
             pass
-        command = command.replace('{NOSPLIT}', file_name)
+        command = command.replace('{NOSPLIT}',file_name)
+
     try:
-        results = run(command.format(INPUT="/tmp/infile", OUTPUT="/tmp/outfile"))
+        results = run(command)
     except Exception as e:
         print("Error in running the command:"+ command)
         return str(e)
@@ -147,7 +148,7 @@ if __name__ == '__main__':
         if os.path.exists(nosplit_file):
             printerr("[INFO] Uploading file to bucket without splitting")
             nosplit_s3 = upload_to_bucket(nosplit_file, True)
-            
+            # print(nosplit_s3)
         else:
             printerr("[ERROR] --nosplit: File not found")
             exit(0)
@@ -169,7 +170,7 @@ if __name__ == '__main__':
         filekeys = pool.map(upload_to_bucket, chunks)
         db.dump()  # save the db to file
         try:
-            fexec = FunctionExecutor(runtime=runtime) # change runtime memory if reuired
+            fexec = FunctionExecutor(runtime=runtime) # change runtime memory if required
             fexec.map(execute_command,filekeys, extra_args={command, nosplit_s3})
             output = fexec.get_result()
         except Exception as e:
