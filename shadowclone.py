@@ -45,7 +45,7 @@ def upload_to_bucket(chunk, keep_extension=False):
 
     if db.exists(chunk_hash):
         # same file already exists in bucket
-        printerr("[INFO] The file is already uploaded to bucket. Skipping upload.")
+        printerr("[INFO] This file is already uploaded to bucket. Skipping upload.")
         return db.get(chunk_hash)
 
     bucket_name = config.STORAGE_BUCKET
@@ -61,7 +61,7 @@ def upload_to_bucket(chunk, keep_extension=False):
     try:
         storage.put_object(bucket=bucket_name, key=upload_key, body=contents)
         db.set(chunk_hash, bucket_name+'/'+upload_key)
-        printerr("[INFO] File uploaded successfully:"+ bucket_name + "/" + upload_key)
+        printerr("[INFO] File uploaded successfully: "+ bucket_name + "/" + upload_key)
     except Exception as e:
         printerr("[ERROR] Error occured while accessing the storage bucket. Did you update the config.py file?")
         # exit()
@@ -84,8 +84,11 @@ def delete_bucket_files(fileslist):
         raise e
     return
 
-
+# This function runs in cloud
 def execute_command(obj, command, nosplit):
+    if not command: #hopefully we never go into this
+        return "LITHOPS ERROR! Command was not received by the cloud function! Re-run the same command."
+
     from invoke import run
     data = obj.data_stream.read()
 
@@ -93,10 +96,11 @@ def execute_command(obj, command, nosplit):
         for line in data.splitlines():
             infile.write(line.decode("UTF-8")+'\n')
 
-    command = command.replace('{INPUT}','/tmp/infile')
-    command = command.replace('{OUTPUT}','/tmp/outfile')
+    command = command.replace('{INPUT}', '/tmp/infile')
+    command = command.replace('{OUTPUT}', '/tmp/outfile')
 
-    if nosplit:
+    #go into this only when a nosplit file is provided
+    if nosplit: 
         # print(nosplit)
         s3 = boto3.client('s3')
         bucket_name = nosplit.split('/')[0]
@@ -171,7 +175,7 @@ if __name__ == '__main__':
         db.dump()  # save the db to file
         try:
             fexec = FunctionExecutor(runtime=runtime) # change runtime memory if required
-            fexec.map(execute_command,filekeys, extra_args={command, nosplit_s3})
+            fexec.map(execute_command, filekeys, extra_args=(command, nosplit_s3,))
             output = fexec.get_result()
         except Exception as e:
             printerr("[ERROR] Could not execute the runtime.")
