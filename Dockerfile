@@ -63,9 +63,9 @@ RUN unzip lithops_lambda.zip \
 
 
 # install go
-RUN wget https://dl.google.com/go/go1.19.5.linux-amd64.tar.gz
-RUN tar -xvf go1.19.5.linux-amd64.tar.gz
-RUN rm go1.19.5.linux-amd64.tar.gz
+RUN wget https://dl.google.com/go/go1.20.5.linux-amd64.tar.gz
+RUN tar -xvf go1.20.5.linux-amd64.tar.gz
+RUN rm go1.20.5.linux-amd64.tar.gz
 RUN mv go /usr/local
 
 # ENV for Go
@@ -96,7 +96,7 @@ RUN git clone https://github.com/robertdavidgraham/masscan /masscan && cd /massc
 
 RUN  curl -o /function/resolvers.txt -LO https://raw.githubusercontent.com/janmasarik/resolvers/master/resolvers.txt
 
-COPY ./massdns /usr/local/bin/massdns
+COPY ./bin/massdns /usr/local/bin/massdns
 
 # install massdns
 # RUN git clone https://github.com/blechschmidt/massdns.git
