@@ -74,6 +74,12 @@ ENV PATH="${PATH}:${GOROOT}/bin"
 ENV PATH="${PATH}:${GOPATH}/bin"
 ENV GOPATH=$HOME/go
 
+ENV HOME="/tmp"
+RUN mkdir "/tmp/.config"
+RUN chmod -R a+rwx "/tmp"
+
+RUN go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest
+
 RUN go install github.com/d3mondev/puredns/v2@latest
 
 RUN go install -v github.com/projectdiscovery/httpx/cmd/httpx@latest
