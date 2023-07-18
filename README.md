@@ -83,6 +83,12 @@ Obviously, you can make any number of function invocations per month. The table 
 - [Fleex](https://github.com/FleexSecurity/fleex)
 - [gopherblazer](https://github.com/0xdevalias/gopherblazer)
 
+### Support
+If you like ShadowClone and would like to show some appreciation, send me the bugs you find using this tool ;) 
+
+Or you can buy me a coffee :) 
+<a href="https://www.buymeacoffee.com/fyoorer" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-black.png" alt="Buy Me A Coffee" width=300px> </a>
+
 ## Disclaimer
 This tool is designed as a proof-of-concept implementation and it's usage is intended for educational purpose only. Usage
 for attacking targets without prior mutual consent is illegal. It's the end user's responsibility to obey all applicable local, state and federal laws. Developers assume no liability and are not responsible for any misuse or damage caused by this program. 
