@@ -86,7 +86,8 @@ Obviously, you can make any number of function invocations per month. The table 
 ### Support
 If you like ShadowClone and would like to show some appreciation, send me the bugs you find using this tool ;) 
 
-Or you can buy me a coffee :) 
+Or you can buy me a coffee :)
+
 <a href="https://www.buymeacoffee.com/fyoorer" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-black.png" alt="Buy Me A Coffee" width=300px> </a>
 
 ## Disclaimer
