@@ -1,7 +1,7 @@
 # Define custom function directory
 ARG FUNCTION_DIR="/function"
 
-FROM python:3.9-buster as build-image
+FROM python:3.11 as build-image
 
 # Include global arg in this stage of the build
 ARG FUNCTION_DIR
@@ -67,9 +67,9 @@ RUN unzip lithops_lambda.zip \
 
 
 # install go
-RUN wget https://dl.google.com/go/go1.20.5.linux-amd64.tar.gz
-RUN tar -xvf go1.20.5.linux-amd64.tar.gz
-RUN rm go1.20.5.linux-amd64.tar.gz
+RUN wget https://go.dev/dl/go1.22.3.linux-amd64.tar.gz
+RUN tar -xvf go1.22.3.linux-amd64.tar.gz
+RUN rm go1.22.3.linux-amd64.tar.gz
 RUN mv go /usr/local
 
 # ENV for Go
