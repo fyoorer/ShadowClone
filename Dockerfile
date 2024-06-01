@@ -45,7 +45,7 @@ RUN pip install \
         arjun \
         dirsearch
 
-FROM python:3.12-coverage
+FROM python:3.11
 
 # Include global arg in this stage of the build
 ARG FUNCTION_DIR
