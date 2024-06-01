@@ -14,7 +14,9 @@ RUN apt-get update && \
   cmake \
   unzip \
   git \
-  libcurl4-openssl-dev
+  libcurl4-openssl-dev \
+  gcc \
+  libpcap-dev
 
 # Copy function code
 RUN mkdir -p ${FUNCTION_DIR}
@@ -38,10 +40,12 @@ RUN pip install \
         cloudpickle \
         ps-mem \
         tblib \
-        delegator.py
+        delegator.py \
+        xnLinkFinder \
+        arjun \
+        dirsearch
 
-
-FROM python:3.9-buster
+FROM python:3.12-coverage
 
 # Include global arg in this stage of the build
 ARG FUNCTION_DIR
@@ -91,6 +95,16 @@ RUN go install -v github.com/projectdiscovery/nuclei/v2/cmd/nuclei@latest
 RUN go install -v github.com/ffuf/ffuf@latest
 
 RUN go install -v github.com/tomnomnom/fff@latest
+
+RUN go install github.com/g0ldencybersec/CloudRecon@latest
+
+RUN go install -v github.com/projectdiscovery/naabu/v2/cmd/naabu@latest
+
+RUN go install github.com/projectdiscovery/katana/cmd/katana@latest
+
+RUN go install -v github.com/projectdiscovery/shuffledns/cmd/shuffledns@latest
+
+RUN go install -v github.com/projectdiscovery/dnsx/cmd/dnsx@latest
 
 RUN git clone https://github.com/projectdiscovery/nuclei-templates.git /nuclei-templates
 
