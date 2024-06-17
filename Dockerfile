@@ -1,7 +1,7 @@
 # Define custom function directory
 ARG FUNCTION_DIR="/function"
 
-FROM python:3.9-buster as build-image
+FROM python:3.10-buster as build-image
 
 # Include global arg in this stage of the build
 ARG FUNCTION_DIR
@@ -14,7 +14,8 @@ RUN apt-get update && \
   cmake \
   unzip \
   git \
-  libcurl4-openssl-dev
+  libcurl4-openssl-dev \
+  glibc-source
 
 # Copy function code
 RUN mkdir -p ${FUNCTION_DIR}
@@ -39,9 +40,9 @@ RUN pip install \
         ps-mem \
         tblib \
         delegator.py
+		invoke
 
-
-FROM python:3.9-buster
+FROM python:3.10-buster
 
 # Include global arg in this stage of the build
 ARG FUNCTION_DIR
@@ -96,18 +97,8 @@ RUN git clone https://github.com/projectdiscovery/nuclei-templates.git /nuclei-t
 
 RUN git clone https://github.com/0xjbb/static-nmap.git /static-nmap && chmod +x /static-nmap/nmap
 
-RUN git clone https://github.com/robertdavidgraham/masscan /masscan && cd /masscan && make 
-
-# RUN curl -LO https://github.com/assetnote/kiterunner/releases/download/v1.0.2/kiterunner_1.0.2_linux_amd64.tar.gz && tar xvf kiterunner_1.0.2_linux_amd64.tar.gz 
-
 RUN  curl -o /function/resolvers.txt -LO https://raw.githubusercontent.com/janmasarik/resolvers/master/resolvers.txt
 
-COPY ./bin/massdns /usr/local/bin/massdns
-
-# install massdns
-# RUN git clone https://github.com/blechschmidt/massdns.git
-# RUN cd massdns && make && cp bin/massdns /usr/local/bin/massdns
-
-
 ENTRYPOINT [ "/usr/local/bin/python", "-m", "awslambdaric" ]
+
 CMD [ "handler.entry_point.lambda_handler" ]
