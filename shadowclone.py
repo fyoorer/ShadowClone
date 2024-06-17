@@ -16,9 +16,6 @@ import string
 import numpy as np
 
 
-GREEN = "\033[32m"
-RESET = "\033[0m"
-
 def printerr(msg):
     sys.stderr.write(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S,%f")[:-3] +" " + msg + "\n")
 
@@ -112,7 +109,7 @@ def execute_command_chunks(obj, command, nosplit, bucket_name, scan_id, storage)
     import os
 
     if not command: #hopefully we never go into this
-        return "LITHOPS ERROR! Command was not received by the cloud function! Re-run the same command."
+        return "LITHOPS ERROR! Command was not received by the cloud function! Try re-running the same command."
 
     data = obj.data_stream.read()
 
@@ -148,7 +145,7 @@ def execute_command_chunks(obj, command, nosplit, bucket_name, scan_id, storage)
     return results.stdout
 
 
-# alternative implementation where chunks are passed as array to avoid uploads
+# alternative implementation where chunks are passed as array to avoid S3 uploads
 def execute_command_arr(input_data, command, nosplit, bucket_name, scan_id, storage):
     from invoke import run
     import uuid
@@ -239,16 +236,15 @@ if __name__ == '__main__':
         else:
             nosplit_s3 = None
         
-        # if input file is bigger than 5mb, use the old method
+        # if input file is bigger than 5mb, use the chunks method
         if is_file_small_enough(infile):
-            printerr("[INFO] Input file is small enough. Skipping upload.")
+            printerr("[INFO] Input file is small enough. Using dynamic mode!")
             printerr("[INFO] Splitting input file into chunks of "+ str(SPLIT_NUM) +" lines")
             keys = splitter(infile, SPLIT_NUM)
             try:
                 # Generate a random alphanumeric scan_id
                 num_letters = 8
                 scan_id = ''.join(random.choices(string.ascii_letters + string.digits, k=num_letters))
-                printerr("[INFO] Scan ID: " + GREEN + scan_id + RESET)
                 fexec = FunctionExecutor(runtime=runtime) # change runtime memory if required
                 fexec.map(execute_command_arr, keys, extra_args=(command, nosplit_s3, bucket_name, scan_id,))
                 output = fexec.get_result()
@@ -257,7 +253,7 @@ if __name__ == '__main__':
                 print(e)
                 sys.exit(1)
         else:
-            printerr("[INFO] Large input file provided. Using file chunks")
+            printerr("[INFO] Large input file provided. Using file chunks mode.")
             printerr("[INFO] Splitting input file into chunks of "+ str(SPLIT_NUM) +" lines")
             chunks = splitfile(infile, SPLIT_NUM)
             if len(chunks) == 0: #empty file
@@ -296,6 +292,6 @@ if __name__ == '__main__':
                 except:
                     pass
             print(line)
-    printerr("[INFO] Scan ID: " + GREEN + scan_id + RESET) # this id can be used to download scan artifacts
+    printerr("[INFO] Scan ID: " + scan_id) # this id can be used to download scan artifacts
 
 

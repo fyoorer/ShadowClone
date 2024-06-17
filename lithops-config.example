@@ -2,6 +2,7 @@ lithops:
     backend: aws_lambda
     storage: aws_s3
     execution_timeout: 1800
+	monitoring_interval: 2
 
 aws:
     access_key_id: AKIADEADBEEF
