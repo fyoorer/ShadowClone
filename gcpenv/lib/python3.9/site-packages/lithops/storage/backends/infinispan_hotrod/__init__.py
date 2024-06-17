@@ -1,1 +1,0 @@
-from lithops.storage.backends.infinispan_hotrod.infinispan_hotrod import InfinispanHotrodBackend as StorageBackend

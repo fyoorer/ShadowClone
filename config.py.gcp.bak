@@ -1,4 +1,0 @@
-LITHOPS_RUNTIME="us.gcr.io/lithops-393723/shadowruntime"
-#LITHOPS_RUNTIME="lithops_v2-6-0_ke73/litruntime" #works with python 3.9.5 and lithops 2.6.0
-STORAGE_BUCKET="lithops-shadowclone"
-PICKLE_DB="bucket-hash.db"
