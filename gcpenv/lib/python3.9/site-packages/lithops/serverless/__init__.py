@@ -1,0 +1,1 @@
+from .serverless import ServerlessHandler

@@ -1,0 +1,60 @@
+Encountered a bad command exit code!
+
+Command: 'ffuf -u https://aop-configs.beef.live.ue1a.on.epicgames.com/FUZZ -w /tmp/infile -mc all'
+
+Exit code: 1
+
+Stdout: already printed
+
+Stderr: already printed
+
+Encountered a bad command exit code!
+
+Command: 'ffuf -u https://aop-configs.beef.live.ue1a.on.epicgames.com/FUZZ -w /tmp/infile -noninteractive -s -mc all'
+
+Exit code: 1
+
+Stdout: already printed
+
+Stderr: already printed
+
+Encountered a bad command exit code!
+
+Command: 'ffuf -u https://aop-configs.beef.live.ue1a.on.epicgames.com/FUZZ -w /tmp/infile -noninteractive -s -mc all -scrapers none'
+
+Exit code: 1
+
+Stdout: already printed
+
+Stderr: already printed
+
+Encountered a bad command exit code!
+
+Command: 'ffuf -u https://aop-configs.beef.live.ue1a.on.epicgames.com/FUZZ -w /tmp/infile -noninteractive -s -mc all -scraperfile /dev/null'
+
+Exit code: 1
+
+Stdout: already printed
+
+Stderr: already printed
+
+Encountered a bad command exit code!
+
+Command: 'ffuf -u https://aop-configs.beef.live.ue1a.on.epicgames.com/FUZZ -w /tmp/infile -noninteractive -s -fc 403'
+
+Exit code: 1
+
+Stdout: already printed
+
+Stderr: already printed
+
+Encountered a bad command exit code!
+
+Command: 'ffuf -u https://aop-configs.beef.live.ue1a.on.epicgames.com/FUZZ -w /tmp/infile'
+
+Exit code: 1
+
+Stdout: already printed
+
+Stderr: already printed
+
