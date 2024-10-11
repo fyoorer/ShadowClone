@@ -71,3 +71,4 @@ wrapt
 delegator.py
 pickledb
 invoke
+pytest
