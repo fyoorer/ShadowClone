@@ -94,6 +94,8 @@ RUN  curl -o /function/resolvers.txt -LO https://raw.githubusercontent.com/janma
 
 RUN git clone https://github.com/projectdiscovery/nuclei-templates /nuclei-templates
 
+RUN pip install git+https://github.com/blacklanternsecurity/trevorspray
+
 COPY ./bins/massdns /usr/local/bin/massdns
 
 COPY ./bins/fff /usr/local/bin/fff
